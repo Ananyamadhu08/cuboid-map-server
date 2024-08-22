@@ -15,3 +15,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model MapCapture {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  longitude Float
+  latitude  Float
+  zoom      Float
+  bearing   Float
+  pitch     Float
+  imageUrl  String
+  createdAt DateTime @default(now()) @db.Timestamp
+}

@@ -10,6 +10,7 @@ import rateLimiter from "@/common/middleware/rateLimiter";
 import requestLogger from "@/common/middleware/requestLogger";
 import { env } from "@/common/utils/envConfig";
 import { authRouter } from "./api/auth/authRouter";
+import { mapCaptureRouter } from "./api/map-capture/mapCaptureRouter";
 
 const logger = pino({ name: "server start" });
 const app: Express = express();
@@ -30,6 +31,7 @@ app.use(requestLogger);
 // Routes
 app.use("/health-check", healthCheckRouter);
 app.use("/auth", authRouter);
+app.use("/map-captures", mapCaptureRouter);
 
 // Swagger UI
 app.use(openAPIRouter);
