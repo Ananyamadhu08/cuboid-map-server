@@ -31,7 +31,7 @@ mapCaptureRegistry.registerPath({
   responses: createApiResponse(MapCaptureResponseSchema, "Map capture saved successfully"),
 });
 
-// GET all captures documentation
+// GET all captures
 mapCaptureRegistry.registerPath({
   method: "get",
   path: "/map-captures",
@@ -39,7 +39,7 @@ mapCaptureRegistry.registerPath({
   responses: createApiResponse(MapCaptureSchema, "Map captures retrieved successfully"),
 });
 
-// GET specific capture by ID documentation
+// GET specific capture by ID
 mapCaptureRegistry.registerPath({
   method: "get",
   path: "/map-captures/{id}",
@@ -57,6 +57,14 @@ mapCaptureRegistry.registerPath({
   responses: createApiResponse(MapCaptureSchema, "Map capture retrieved successfully"),
 });
 
+// GET latest map capture
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/user/latest",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema, "Latest map capture retrieved successfully"),
+});
+
 // POST endpoint to save the map capture
 mapCaptureRouter.post("/", validateRequest(MapCaptureSchema), mapCaptureController.saveCapture);
 
@@ -65,3 +73,6 @@ mapCaptureRouter.get("/", mapCaptureController.getAllCaptures);
 
 // GET endpoint to retrieve a specific map capture by ID
 mapCaptureRouter.get("/:id", mapCaptureController.getCaptureById);
+
+// GET endpoint to retrieve a specific map capture by ID
+mapCaptureRouter.get("/user/latest", mapCaptureController.getLatestCaptureByUserId);
