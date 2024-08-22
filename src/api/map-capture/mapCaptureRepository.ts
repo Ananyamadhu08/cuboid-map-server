@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 export class MapCaptureRepository {
   async saveCapture(data: {
     userId: string;
+    title: string;
     longitude: number;
     latitude: number;
     zoom: number;
@@ -27,5 +28,3 @@ export class MapCaptureRepository {
     });
   }
 }
-
-export const mapCaptureRepository = new MapCaptureRepository();
