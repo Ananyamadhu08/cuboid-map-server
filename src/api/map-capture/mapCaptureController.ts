@@ -17,7 +17,21 @@ class MapCaptureController {
       return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
     }
 
-    const serviceResponse = await mapCaptureService.saveCapture(userId, req.body);
+    const { title, longitude, latitude, zoom, bearing, pitch, imageUrl } = req.body;
+
+    if (!title || !longitude || !latitude || !imageUrl) {
+      return ServiceResponse.failure("Missing required fields in the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.saveCapture(userId, {
+      title,
+      longitude,
+      latitude,
+      zoom,
+      bearing,
+      pitch,
+      imageUrl,
+    });
 
     return handleServiceResponse(serviceResponse, res);
   }
