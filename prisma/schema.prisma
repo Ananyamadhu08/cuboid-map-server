@@ -8,22 +8,25 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  username  String   @unique
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  username   String       @unique
+  email      String       @unique
+  password   String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  MapCapture MapCapture[]
 }
 
 model MapCapture {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
   longitude Float
   latitude  Float
   zoom      Float
   bearing   Float
   pitch     Float
   imageUrl  String
-  createdAt DateTime @default(now()) @db.Timestamp
+  createdAt DateTime @default(now())
 }

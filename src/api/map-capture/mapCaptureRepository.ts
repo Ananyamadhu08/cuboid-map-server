@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 export class MapCaptureRepository {
   async saveCapture(data: {
     userId: string;
+    title: string;
     longitude: number;
     latitude: number;
     zoom: number;
@@ -26,6 +27,13 @@ export class MapCaptureRepository {
       where: { id },
     });
   }
-}
 
-export const mapCaptureRepository = new MapCaptureRepository();
+  async findLatestCaptureByUserId(userId: string) {
+    return prisma.mapCapture.findFirst({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+}
