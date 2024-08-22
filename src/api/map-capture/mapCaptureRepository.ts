@@ -27,4 +27,13 @@ export class MapCaptureRepository {
       where: { id },
     });
   }
+
+  async findLatestCaptureByUserId(userId: string) {
+    return prisma.mapCapture.findFirst({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
 }
