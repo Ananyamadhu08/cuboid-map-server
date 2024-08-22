@@ -55,6 +55,22 @@ export class MapCaptureService {
       return ServiceResponse.failure("Failed to retrieve map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async getLatestCaptureByUserId(userId: string) {
+    try {
+      const latestCapture = await this.mapCaptureRepository.findLatestCaptureByUserId(userId);
+
+      if (!latestCapture) {
+        return ServiceResponse.failure("No captures found for this user.", null, StatusCodes.NOT_FOUND);
+      }
+
+      return ServiceResponse.success("Latest map capture retrieved successfully", latestCapture, StatusCodes.OK);
+    } catch (error) {
+      console.log("Error retrieving latest map capture:", error);
+
+      return ServiceResponse.failure("Failed to retrieve latest map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
 
 export const mapCaptureService = new MapCaptureService();
