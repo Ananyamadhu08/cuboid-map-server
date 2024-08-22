@@ -7,6 +7,7 @@ export type MapCapture = z.infer<typeof MapCaptureSchema>;
 
 export const MapCaptureSchema = z
   .object({
+    title: z.string().min(1, "Title is required"),
     longitude: z.number(),
     latitude: z.number(),
     zoom: z.number(),
@@ -20,6 +21,7 @@ export const MapCaptureResponseSchema = z
   .object({
     id: z.string().openapi({ description: "The unique identifier of the map capture" }),
     userId: z.string().openapi({ description: "The ID of the user who created the capture" }),
+    title: z.string().openapi({ description: "The title of the map capture" }),
     longitude: z.number(),
     latitude: z.number(),
     zoom: z.number(),
