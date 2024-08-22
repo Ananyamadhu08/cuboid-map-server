@@ -9,6 +9,10 @@ interface MapCaptureRequest extends Request {
   user?: User;
 }
 
+export interface LatestMapCaptureRequest extends Request {
+  user?: User;
+}
+
 class MapCaptureController {
   async saveCapture(req: MapCaptureRequest, res: Response) {
     const userId = req.user?.id as string;
@@ -47,6 +51,17 @@ class MapCaptureController {
 
     const serviceResponse = await mapCaptureService.getCaptureById(id);
 
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getLatestCaptureByUserId(req: LatestMapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.getLatestCaptureByUserId(userId);
     return handleServiceResponse(serviceResponse, res);
   }
 }
