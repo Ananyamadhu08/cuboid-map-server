@@ -22,6 +22,15 @@ export class MapCaptureRepository {
     return prisma.mapCapture.findMany();
   }
 
+  async findAllCapturesByUserId(userId: string) {
+    return prisma.mapCapture.findMany({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
   async findCaptureById(id: string) {
     return prisma.mapCapture.findUnique({
       where: { id },

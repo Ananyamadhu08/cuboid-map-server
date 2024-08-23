@@ -12,6 +12,12 @@ class AuthController {
     const serviceResponse = await authService.login(req.body);
     return handleServiceResponse(serviceResponse, res);
   };
+
+  public refreshToken: RequestHandler = async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+    const serviceResponse = await authService.refresh(refreshToken);
+    return handleServiceResponse(serviceResponse, res);
+  };
 }
 
 export const authController = new AuthController();

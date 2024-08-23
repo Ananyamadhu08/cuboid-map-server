@@ -1,9 +1,10 @@
 import { ServiceResponse } from "@/common/models/serviceResponse";
-import { generateToken } from "@/common/utils/jwtUtils";
+import { generateRefreshToken, generateToken, verifyToken } from "@/common/utils/jwtUtils";
 import { logger } from "@/server";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import bcrypt from "bcrypt";
 import { StatusCodes } from "http-status-codes";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import type { z } from "zod";
 import type { AuthRequestSchema } from "./authModel";
 import { authRepository } from "./authRepository";
@@ -19,17 +20,23 @@ class AuthService {
     try {
       const user = await authRepository.createUser({ username, email, password });
 
-      const token = generateToken(user.id);
-      return ServiceResponse.success("Registration successful", { accessToken: token });
+      const accessToken = generateToken(user.id);
+      const refreshToken = generateRefreshToken(user.id);
+
+      await authRepository.saveRefreshToken(user.id, refreshToken);
+
+      return ServiceResponse.success("Registration successful", {
+        accessToken,
+        refreshToken,
+        username: user.username,
+        email: user.email,
+      });
     } catch (error) {
-      const errorMessage = `Error Registering User: $${(error as Error).message}`;
+      const errorMessage = `Error Registering User: ${(error as Error).message}`;
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
-          // Unique constraint failed
           const fieldName = constraintFieldMap[error.meta?.target as string] || "field";
-
           logger.error(errorMessage);
-
           return ServiceResponse.failure(
             `Registration failed: The ${fieldName} is already in use.`,
             null,
@@ -39,7 +46,6 @@ class AuthService {
       }
 
       logger.error(errorMessage);
-      // For other errors, return a generic error message
       return ServiceResponse.failure(
         "Registration failed: An unexpected error occurred.",
         null,
@@ -55,8 +61,51 @@ class AuthService {
       return ServiceResponse.failure("Invalid username or password", null, StatusCodes.UNAUTHORIZED);
     }
 
-    const token = generateToken(user.id);
-    return ServiceResponse.success("Login successful", { accessToken: token });
+    const accessToken = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    await authRepository.saveRefreshToken(user.id, refreshToken);
+
+    return ServiceResponse.success("Login successful", {
+      accessToken,
+      refreshToken,
+      username: user.username,
+      email: user.email,
+    });
+  }
+
+  async refresh(refreshToken: string) {
+    try {
+      const decoded = verifyToken(refreshToken, "refresh");
+      const userId = decoded.userId;
+
+      const user = await authRepository.findUserById(userId);
+      if (!user) {
+        return ServiceResponse.failure("User not found", null, StatusCodes.UNAUTHORIZED);
+      }
+
+      const storedRefreshToken = await authRepository.findRefreshToken(userId);
+      if (refreshToken !== storedRefreshToken) {
+        return ServiceResponse.failure("Invalid refresh token", null, StatusCodes.FORBIDDEN);
+      }
+
+      const accessToken = generateToken(userId);
+      return ServiceResponse.success("Access token refreshed", { accessToken });
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        // If the refresh token is expired, return 403 Forbidden
+        return ServiceResponse.failure("Refresh token expired", null, StatusCodes.FORBIDDEN);
+      } else if (error instanceof JsonWebTokenError) {
+        // If the refresh token is otherwise invalid, return 403 Forbidden
+        return ServiceResponse.failure("Invalid refresh token", null, StatusCodes.FORBIDDEN);
+      } else if (error instanceof Error) {
+        logger.error("Error refreshing token:", error.message, error.stack);
+        return ServiceResponse.failure("Error processing refresh token", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      } else {
+        logger.error("Unknown error refreshing token");
+        return ServiceResponse.failure("Error processing refresh token", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+    }
   }
 }
 

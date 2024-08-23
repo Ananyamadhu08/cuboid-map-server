@@ -68,8 +68,8 @@ mapCaptureRegistry.registerPath({
 // POST endpoint to save the map capture
 mapCaptureRouter.post("/", validateRequest(MapCaptureSchema), mapCaptureController.saveCapture);
 
-// GET endpoint to retrieve all map captures
-mapCaptureRouter.get("/", mapCaptureController.getAllCaptures);
+// GET endpoint to retrieve all map captures of the user
+mapCaptureRouter.get("/", mapCaptureController.getAllUserCaptures);
 
 // GET endpoint to retrieve a specific map capture by ID
 mapCaptureRouter.get("/:id", mapCaptureController.getCaptureById);
