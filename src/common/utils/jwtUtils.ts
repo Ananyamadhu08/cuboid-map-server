@@ -4,7 +4,7 @@ import { env } from "./envConfig";
 const secret = env.JWT_SECRET;
 
 export function generateToken(userId: string): string {
-  return jwt.sign({ userId }, secret, { expiresIn: "1d" }); // Access token valid for 1 hour
+  return jwt.sign({ userId }, secret, { expiresIn: "1d" }); // Access token valid for 1 day
 }
 
 export function generateRefreshToken(userId: string): string {
