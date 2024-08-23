@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../src/common/types.ts"],"sourcesContent":["import type { User } from \"@prisma/client\";\nimport type { Request } from \"express\";\n\nexport interface AuthenticatedRequest extends Request {\n  user?: User;\n}\n"],"mappings":";;;;;;;;;;;;;;;;AAAA;AAAA;","names":[]}

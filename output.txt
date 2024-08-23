@@ -1,0 +1,2637 @@
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/auth/authController.ts
+
+path-file-content: import { handleServiceResponse } from "@/common/utils/httpHandlers";
+import type { Request, RequestHandler, Response } from "express";
+import { authService } from "./authService";
+
+class AuthController {
+  public register: RequestHandler = async (req: Request, res: Response) => {
+    const serviceResponse = await authService.register(req.body);
+    return handleServiceResponse(serviceResponse, res);
+  };
+
+  public login: RequestHandler = async (req: Request, res: Response) => {
+    const serviceResponse = await authService.login(req.body);
+    return handleServiceResponse(serviceResponse, res);
+  };
+
+  public refreshToken: RequestHandler = async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+    const serviceResponse = await authService.refresh(refreshToken);
+    return handleServiceResponse(serviceResponse, res);
+  };
+}
+
+export const authController = new AuthController();
+
+
+path-file-name-content: authController.ts - import { handleServiceResponse } from "@/common/utils/httpHandlers";
+import type { Request, RequestHandler, Response } from "express";
+import { authService } from "./authService";
+
+class AuthController {
+  public register: RequestHandler = async (req: Request, res: Response) => {
+    const serviceResponse = await authService.register(req.body);
+    return handleServiceResponse(serviceResponse, res);
+  };
+
+  public login: RequestHandler = async (req: Request, res: Response) => {
+    const serviceResponse = await authService.login(req.body);
+    return handleServiceResponse(serviceResponse, res);
+  };
+
+  public refreshToken: RequestHandler = async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+    const serviceResponse = await authService.refresh(refreshToken);
+    return handleServiceResponse(serviceResponse, res);
+  };
+}
+
+export const authController = new AuthController();
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/auth/authModel.ts
+
+path-file-content: import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+import { z } from "zod";
+
+extendZodWithOpenApi(z);
+
+export const AuthRequestSchema = z
+  .object({
+    username: z
+      .string()
+      .min(3, { message: "Username is required and must be at least 3 characters" })
+      .openapi({ example: "user123" }),
+    password: z
+      .string()
+      .min(8, { message: "Password is required and must be at least 8 characters" })
+      .openapi({ example: "securepassword" }),
+    email: z.string().email({ message: "A valid email is required" }).openapi({ example: "user@example.com" }),
+  })
+  .openapi("AuthRequest");
+
+export const AuthResponseSchema = z
+  .object({
+    accessToken: z.string().openapi({ example: "jwt.token.here" }),
+    refreshToken: z.string().openapi({ example: "refresh.token.here" }),
+    username: z.string().openapi({ example: "user123" }),
+    email: z.string().email().openapi({ example: "user@example.com" }),
+  })
+  .openapi("AuthResponse");
+
+
+path-file-name-content: authModel.ts - import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+import { z } from "zod";
+
+extendZodWithOpenApi(z);
+
+export const AuthRequestSchema = z
+  .object({
+    username: z
+      .string()
+      .min(3, { message: "Username is required and must be at least 3 characters" })
+      .openapi({ example: "user123" }),
+    password: z
+      .string()
+      .min(8, { message: "Password is required and must be at least 8 characters" })
+      .openapi({ example: "securepassword" }),
+    email: z.string().email({ message: "A valid email is required" }).openapi({ example: "user@example.com" }),
+  })
+  .openapi("AuthRequest");
+
+export const AuthResponseSchema = z
+  .object({
+    accessToken: z.string().openapi({ example: "jwt.token.here" }),
+    refreshToken: z.string().openapi({ example: "refresh.token.here" }),
+    username: z.string().openapi({ example: "user123" }),
+    email: z.string().email().openapi({ example: "user@example.com" }),
+  })
+  .openapi("AuthResponse");
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/auth/authRepository.ts
+
+path-file-content: import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
+
+const prisma = new PrismaClient();
+
+export class AuthRepository {
+  async createUser({ username, email, password }: { username: string; email: string; password: string }) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+    });
+  }
+
+  async findUserByUsername(username: string) {
+    return prisma.user.findUnique({
+      where: { username },
+    });
+  }
+
+  async findUserById(userId: string) {
+    return prisma.user.findUnique({
+      where: { id: userId },
+    });
+  }
+
+  async saveRefreshToken(userId: string, refreshToken: string) {
+    return prisma.refreshToken.upsert({
+      where: { userId },
+      update: { token: refreshToken },
+      create: { userId, token: refreshToken },
+    });
+  }
+
+  async findRefreshToken(userId: string) {
+    const tokenRecord = await prisma.refreshToken.findUnique({
+      where: { userId },
+    });
+    return tokenRecord?.token || null;
+  }
+}
+
+export const authRepository = new AuthRepository();
+
+
+path-file-name-content: authRepository.ts - import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
+
+const prisma = new PrismaClient();
+
+export class AuthRepository {
+  async createUser({ username, email, password }: { username: string; email: string; password: string }) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+    });
+  }
+
+  async findUserByUsername(username: string) {
+    return prisma.user.findUnique({
+      where: { username },
+    });
+  }
+
+  async findUserById(userId: string) {
+    return prisma.user.findUnique({
+      where: { id: userId },
+    });
+  }
+
+  async saveRefreshToken(userId: string, refreshToken: string) {
+    return prisma.refreshToken.upsert({
+      where: { userId },
+      update: { token: refreshToken },
+      create: { userId, token: refreshToken },
+    });
+  }
+
+  async findRefreshToken(userId: string) {
+    const tokenRecord = await prisma.refreshToken.findUnique({
+      where: { userId },
+    });
+    return tokenRecord?.token || null;
+  }
+}
+
+export const authRepository = new AuthRepository();
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/auth/authRouter.ts
+
+path-file-content: import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
+import { validateRequest } from "@/common/utils/httpHandlers";
+import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import express, { type Router } from "express";
+import { z } from "zod";
+import { authController } from "./authController";
+import { AuthRequestSchema, AuthResponseSchema } from "./authModel";
+
+export const authRegistry = new OpenAPIRegistry();
+export const authRouter: Router = express.Router();
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/register",
+  tags: ["Authentication"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: AuthRequestSchema,
+        },
+      },
+    },
+  },
+  responses: createApiResponse(AuthResponseSchema, "Successful registration"),
+});
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/login",
+  tags: ["Authentication"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: AuthRequestSchema,
+        },
+      },
+    },
+  },
+  responses: createApiResponse(AuthResponseSchema, "Successful login"),
+});
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/refresh-token",
+  tags: ["Authentication"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ refreshToken: z.string().openapi({ example: "refresh.token.here" }) }),
+        },
+      },
+    },
+  },
+  responses: createApiResponse(
+    z.object({ accessToken: z.string().openapi({ example: "jwt.token.here" }) }),
+    "Token refreshed",
+  ),
+});
+
+authRouter.post("/register", validateRequest(AuthRequestSchema), authController.register);
+authRouter.post("/login", validateRequest(AuthRequestSchema), authController.login);
+authRouter.post("/refresh-token", validateRequest(z.object({ refreshToken: z.string() })), authController.refreshToken);
+
+
+path-file-name-content: authRouter.ts - import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
+import { validateRequest } from "@/common/utils/httpHandlers";
+import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import express, { type Router } from "express";
+import { z } from "zod";
+import { authController } from "./authController";
+import { AuthRequestSchema, AuthResponseSchema } from "./authModel";
+
+export const authRegistry = new OpenAPIRegistry();
+export const authRouter: Router = express.Router();
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/register",
+  tags: ["Authentication"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: AuthRequestSchema,
+        },
+      },
+    },
+  },
+  responses: createApiResponse(AuthResponseSchema, "Successful registration"),
+});
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/login",
+  tags: ["Authentication"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: AuthRequestSchema,
+        },
+      },
+    },
+  },
+  responses: createApiResponse(AuthResponseSchema, "Successful login"),
+});
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/refresh-token",
+  tags: ["Authentication"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ refreshToken: z.string().openapi({ example: "refresh.token.here" }) }),
+        },
+      },
+    },
+  },
+  responses: createApiResponse(
+    z.object({ accessToken: z.string().openapi({ example: "jwt.token.here" }) }),
+    "Token refreshed",
+  ),
+});
+
+authRouter.post("/register", validateRequest(AuthRequestSchema), authController.register);
+authRouter.post("/login", validateRequest(AuthRequestSchema), authController.login);
+authRouter.post("/refresh-token", validateRequest(z.object({ refreshToken: z.string() })), authController.refreshToken);
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/auth/authService.ts
+
+path-file-content: import { ServiceResponse } from "@/common/models/serviceResponse";
+import { generateRefreshToken, generateToken, verifyToken } from "@/common/utils/jwtUtils";
+import { logger } from "@/server";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import bcrypt from "bcrypt";
+import { StatusCodes } from "http-status-codes";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import type { z } from "zod";
+import type { AuthRequestSchema } from "./authModel";
+import { authRepository } from "./authRepository";
+
+// Mapping Prisma constraint names to user-friendly field names for better error messages
+const constraintFieldMap: { [key: string]: string } = {
+  User_email_key: "email",
+  User_username_key: "username",
+};
+
+class AuthService {
+  async register({ username, password, email }: z.infer<typeof AuthRequestSchema>) {
+    try {
+      const user = await authRepository.createUser({ username, email, password });
+
+      const accessToken = generateToken(user.id);
+      const refreshToken = generateRefreshToken(user.id);
+
+      await authRepository.saveRefreshToken(user.id, refreshToken);
+
+      return ServiceResponse.success("Registration successful", {
+        accessToken,
+        refreshToken,
+        username: user.username,
+        email: user.email,
+      });
+    } catch (error) {
+      const errorMessage = `Error Registering User: ${(error as Error).message}`;
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          const fieldName = constraintFieldMap[error.meta?.target as string] || "field";
+          logger.error(errorMessage);
+          return ServiceResponse.failure(
+            `Registration failed: The ${fieldName} is already in use.`,
+            null,
+            StatusCodes.BAD_REQUEST,
+          );
+        }
+      }
+
+      logger.error(errorMessage);
+      return ServiceResponse.failure(
+        "Registration failed: An unexpected error occurred.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async login({ username, password }: z.infer<typeof AuthRequestSchema>) {
+    const user = await authRepository.findUserByUsername(username);
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return ServiceResponse.failure("Invalid username or password", null, StatusCodes.UNAUTHORIZED);
+    }
+
+    const accessToken = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    await authRepository.saveRefreshToken(user.id, refreshToken);
+
+    return ServiceResponse.success("Login successful", {
+      accessToken,
+      refreshToken,
+      username: user.username,
+      email: user.email,
+    });
+  }
+
+  async refresh(refreshToken: string) {
+    try {
+      const decoded = verifyToken(refreshToken, "refresh");
+      const userId = decoded.userId;
+
+      const user = await authRepository.findUserById(userId);
+      if (!user) {
+        return ServiceResponse.failure("User not found", null, StatusCodes.UNAUTHORIZED);
+      }
+
+      const storedRefreshToken = await authRepository.findRefreshToken(userId);
+      if (refreshToken !== storedRefreshToken) {
+        return ServiceResponse.failure("Invalid refresh token", null, StatusCodes.FORBIDDEN);
+      }
+
+      const accessToken = generateToken(userId);
+      return ServiceResponse.success("Access token refreshed", { accessToken });
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        // If the refresh token is expired, return 403 Forbidden
+        return ServiceResponse.failure("Refresh token expired", null, StatusCodes.FORBIDDEN);
+      } else if (error instanceof JsonWebTokenError) {
+        // If the refresh token is otherwise invalid, return 403 Forbidden
+        return ServiceResponse.failure("Invalid refresh token", null, StatusCodes.FORBIDDEN);
+      } else if (error instanceof Error) {
+        logger.error("Error refreshing token:", error.message, error.stack);
+        return ServiceResponse.failure("Error processing refresh token", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      } else {
+        logger.error("Unknown error refreshing token");
+        return ServiceResponse.failure("Error processing refresh token", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+}
+
+export const authService = new AuthService();
+
+
+path-file-name-content: authService.ts - import { ServiceResponse } from "@/common/models/serviceResponse";
+import { generateRefreshToken, generateToken, verifyToken } from "@/common/utils/jwtUtils";
+import { logger } from "@/server";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import bcrypt from "bcrypt";
+import { StatusCodes } from "http-status-codes";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import type { z } from "zod";
+import type { AuthRequestSchema } from "./authModel";
+import { authRepository } from "./authRepository";
+
+// Mapping Prisma constraint names to user-friendly field names for better error messages
+const constraintFieldMap: { [key: string]: string } = {
+  User_email_key: "email",
+  User_username_key: "username",
+};
+
+class AuthService {
+  async register({ username, password, email }: z.infer<typeof AuthRequestSchema>) {
+    try {
+      const user = await authRepository.createUser({ username, email, password });
+
+      const accessToken = generateToken(user.id);
+      const refreshToken = generateRefreshToken(user.id);
+
+      await authRepository.saveRefreshToken(user.id, refreshToken);
+
+      return ServiceResponse.success("Registration successful", {
+        accessToken,
+        refreshToken,
+        username: user.username,
+        email: user.email,
+      });
+    } catch (error) {
+      const errorMessage = `Error Registering User: ${(error as Error).message}`;
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          const fieldName = constraintFieldMap[error.meta?.target as string] || "field";
+          logger.error(errorMessage);
+          return ServiceResponse.failure(
+            `Registration failed: The ${fieldName} is already in use.`,
+            null,
+            StatusCodes.BAD_REQUEST,
+          );
+        }
+      }
+
+      logger.error(errorMessage);
+      return ServiceResponse.failure(
+        "Registration failed: An unexpected error occurred.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async login({ username, password }: z.infer<typeof AuthRequestSchema>) {
+    const user = await authRepository.findUserByUsername(username);
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return ServiceResponse.failure("Invalid username or password", null, StatusCodes.UNAUTHORIZED);
+    }
+
+    const accessToken = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    await authRepository.saveRefreshToken(user.id, refreshToken);
+
+    return ServiceResponse.success("Login successful", {
+      accessToken,
+      refreshToken,
+      username: user.username,
+      email: user.email,
+    });
+  }
+
+  async refresh(refreshToken: string) {
+    try {
+      const decoded = verifyToken(refreshToken, "refresh");
+      const userId = decoded.userId;
+
+      const user = await authRepository.findUserById(userId);
+      if (!user) {
+        return ServiceResponse.failure("User not found", null, StatusCodes.UNAUTHORIZED);
+      }
+
+      const storedRefreshToken = await authRepository.findRefreshToken(userId);
+      if (refreshToken !== storedRefreshToken) {
+        return ServiceResponse.failure("Invalid refresh token", null, StatusCodes.FORBIDDEN);
+      }
+
+      const accessToken = generateToken(userId);
+      return ServiceResponse.success("Access token refreshed", { accessToken });
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        // If the refresh token is expired, return 403 Forbidden
+        return ServiceResponse.failure("Refresh token expired", null, StatusCodes.FORBIDDEN);
+      } else if (error instanceof JsonWebTokenError) {
+        // If the refresh token is otherwise invalid, return 403 Forbidden
+        return ServiceResponse.failure("Invalid refresh token", null, StatusCodes.FORBIDDEN);
+      } else if (error instanceof Error) {
+        logger.error("Error refreshing token:", error.message, error.stack);
+        return ServiceResponse.failure("Error processing refresh token", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      } else {
+        logger.error("Unknown error refreshing token");
+        return ServiceResponse.failure("Error processing refresh token", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+}
+
+export const authService = new AuthService();
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/healthCheck/__tests__/healthCheckRouter.test.ts
+
+path-file-content: import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+
+import type { ServiceResponse } from "@/common/models/serviceResponse";
+import { app } from "@/server";
+
+describe("Health Check API endpoints", () => {
+  it("GET / - success", async () => {
+    const response = await request(app).get("/health-check");
+    const result: ServiceResponse = response.body;
+
+    expect(response.statusCode).toEqual(StatusCodes.OK);
+    expect(result.success).toBeTruthy();
+    expect(result.responseObject).toBeNull();
+    expect(result.message).toEqual("Service is healthy");
+  });
+});
+
+
+path-file-name-content: healthCheckRouter.test.ts - import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+
+import type { ServiceResponse } from "@/common/models/serviceResponse";
+import { app } from "@/server";
+
+describe("Health Check API endpoints", () => {
+  it("GET / - success", async () => {
+    const response = await request(app).get("/health-check");
+    const result: ServiceResponse = response.body;
+
+    expect(response.statusCode).toEqual(StatusCodes.OK);
+    expect(result.success).toBeTruthy();
+    expect(result.responseObject).toBeNull();
+    expect(result.message).toEqual("Service is healthy");
+  });
+});
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/healthCheck/healthCheckRouter.ts
+
+path-file-content: import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import express, { type Request, type Response, type Router } from "express";
+import { z } from "zod";
+
+import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
+import { ServiceResponse } from "@/common/models/serviceResponse";
+import { handleServiceResponse } from "@/common/utils/httpHandlers";
+
+export const healthCheckRegistry = new OpenAPIRegistry();
+export const healthCheckRouter: Router = express.Router();
+
+healthCheckRegistry.registerPath({
+  method: "get",
+  path: "/health-check",
+  tags: ["Health Check"],
+  responses: createApiResponse(z.null(), "Success"),
+});
+
+healthCheckRouter.get("/", (_req: Request, res: Response) => {
+  const serviceResponse = ServiceResponse.success("Service is healthy", null);
+  return handleServiceResponse(serviceResponse, res);
+});
+
+
+path-file-name-content: healthCheckRouter.ts - import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import express, { type Request, type Response, type Router } from "express";
+import { z } from "zod";
+
+import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
+import { ServiceResponse } from "@/common/models/serviceResponse";
+import { handleServiceResponse } from "@/common/utils/httpHandlers";
+
+export const healthCheckRegistry = new OpenAPIRegistry();
+export const healthCheckRouter: Router = express.Router();
+
+healthCheckRegistry.registerPath({
+  method: "get",
+  path: "/health-check",
+  tags: ["Health Check"],
+  responses: createApiResponse(z.null(), "Success"),
+});
+
+healthCheckRouter.get("/", (_req: Request, res: Response) => {
+  const serviceResponse = ServiceResponse.success("Service is healthy", null);
+  return handleServiceResponse(serviceResponse, res);
+});
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/map-capture/mapCaptureController.ts
+
+path-file-content: import { ServiceResponse } from "@/common/models/serviceResponse";
+import { handleServiceResponse } from "@/common/utils/httpHandlers";
+import type { User } from "@prisma/client";
+import type { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { mapCaptureService } from "./mapCaptureService";
+
+interface MapCaptureRequest extends Request {
+  user?: User;
+}
+
+export interface LatestMapCaptureRequest extends Request {
+  user?: User;
+}
+
+class MapCaptureController {
+  async saveCapture(req: MapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const { title, longitude, latitude, zoom, bearing, pitch, imageUrl } = req.body;
+
+    if (!title || !longitude || !latitude || !imageUrl) {
+      return ServiceResponse.failure("Missing required fields in the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.saveCapture(userId, {
+      title,
+      longitude,
+      latitude,
+      zoom,
+      bearing,
+      pitch,
+      imageUrl,
+    });
+
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getAllUserCaptures(req: MapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const page = Number.parseInt(req.query.page as string, 10) || 1;
+    const limit = Number.parseInt(req.query.limit as string, 10) || 10;
+
+    const serviceResponse = await mapCaptureService.getAllCapturesByUserId(userId, page, limit);
+
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getCaptureById(req: Request, res: Response) {
+    const { id } = req.params;
+
+    const serviceResponse = await mapCaptureService.getCaptureById(id);
+
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getLatestCaptureByUserId(req: LatestMapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.getLatestCaptureByUserId(userId);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getTopCapturedRegions(req: MapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.getTopCapturedRegions(userId);
+    return handleServiceResponse(serviceResponse, res);
+  }
+}
+
+export const mapCaptureController = new MapCaptureController();
+
+
+path-file-name-content: mapCaptureController.ts - import { ServiceResponse } from "@/common/models/serviceResponse";
+import { handleServiceResponse } from "@/common/utils/httpHandlers";
+import type { User } from "@prisma/client";
+import type { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { mapCaptureService } from "./mapCaptureService";
+
+interface MapCaptureRequest extends Request {
+  user?: User;
+}
+
+export interface LatestMapCaptureRequest extends Request {
+  user?: User;
+}
+
+class MapCaptureController {
+  async saveCapture(req: MapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const { title, longitude, latitude, zoom, bearing, pitch, imageUrl } = req.body;
+
+    if (!title || !longitude || !latitude || !imageUrl) {
+      return ServiceResponse.failure("Missing required fields in the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.saveCapture(userId, {
+      title,
+      longitude,
+      latitude,
+      zoom,
+      bearing,
+      pitch,
+      imageUrl,
+    });
+
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getAllUserCaptures(req: MapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const page = Number.parseInt(req.query.page as string, 10) || 1;
+    const limit = Number.parseInt(req.query.limit as string, 10) || 10;
+
+    const serviceResponse = await mapCaptureService.getAllCapturesByUserId(userId, page, limit);
+
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getCaptureById(req: Request, res: Response) {
+    const { id } = req.params;
+
+    const serviceResponse = await mapCaptureService.getCaptureById(id);
+
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getLatestCaptureByUserId(req: LatestMapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.getLatestCaptureByUserId(userId);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getTopCapturedRegions(req: MapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.getTopCapturedRegions(userId);
+    return handleServiceResponse(serviceResponse, res);
+  }
+}
+
+export const mapCaptureController = new MapCaptureController();
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/map-capture/mapCaptureModel.ts
+
+path-file-content: import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+import { z } from "zod";
+
+extendZodWithOpenApi(z);
+
+export type MapCapture = z.infer<typeof MapCaptureSchema>;
+
+export const MapCaptureSchema = z
+  .object({
+    title: z.string().min(1, "Title is required"),
+    longitude: z.number(),
+    latitude: z.number(),
+    zoom: z.number(),
+    bearing: z.number(),
+    pitch: z.number(),
+    imageUrl: z.string().url(),
+  })
+  .openapi("MapCaptureRequest");
+
+export const MapCaptureResponseSchema = z
+  .object({
+    id: z.string().openapi({ description: "The unique identifier of the map capture" }),
+    userId: z.string().openapi({ description: "The ID of the user who created the capture" }),
+    title: z.string().openapi({ description: "The title of the map capture" }),
+    longitude: z.number(),
+    latitude: z.number(),
+    zoom: z.number(),
+    bearing: z.number(),
+    pitch: z.number(),
+    imageUrl: z.string().url(),
+    createdAt: z.string().openapi({ description: "Timestamp of when the capture was created" }),
+  })
+  .openapi("MapCaptureResponse");
+
+
+path-file-name-content: mapCaptureModel.ts - import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+import { z } from "zod";
+
+extendZodWithOpenApi(z);
+
+export type MapCapture = z.infer<typeof MapCaptureSchema>;
+
+export const MapCaptureSchema = z
+  .object({
+    title: z.string().min(1, "Title is required"),
+    longitude: z.number(),
+    latitude: z.number(),
+    zoom: z.number(),
+    bearing: z.number(),
+    pitch: z.number(),
+    imageUrl: z.string().url(),
+  })
+  .openapi("MapCaptureRequest");
+
+export const MapCaptureResponseSchema = z
+  .object({
+    id: z.string().openapi({ description: "The unique identifier of the map capture" }),
+    userId: z.string().openapi({ description: "The ID of the user who created the capture" }),
+    title: z.string().openapi({ description: "The title of the map capture" }),
+    longitude: z.number(),
+    latitude: z.number(),
+    zoom: z.number(),
+    bearing: z.number(),
+    pitch: z.number(),
+    imageUrl: z.string().url(),
+    createdAt: z.string().openapi({ description: "Timestamp of when the capture was created" }),
+  })
+  .openapi("MapCaptureResponse");
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/map-capture/mapCaptureRepository.ts
+
+path-file-content: import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export class MapCaptureRepository {
+  async saveCapture(data: {
+    userId: string;
+    title: string;
+    longitude: number;
+    latitude: number;
+    zoom: number;
+    bearing: number;
+    pitch: number;
+    imageUrl: string;
+  }) {
+    return prisma.mapCapture.create({
+      data,
+    });
+  }
+
+  async findAllCaptures() {
+    return prisma.mapCapture.findMany();
+  }
+
+  async findAllCapturesByUserId(userId: string, skip: number, take: number) {
+    return prisma.mapCapture.findMany({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip,
+      take,
+    });
+  }
+
+  async findCaptureById(id: string) {
+    return prisma.mapCapture.findUnique({
+      where: { id },
+    });
+  }
+
+  async findLatestCaptureByUserId(userId: string) {
+    return prisma.mapCapture.findFirst({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  async findTopCapturedRegions(userId: string) {
+    const result = await prisma.mapCapture.groupBy({
+      by: ["longitude", "latitude", "title", "imageUrl", "pitch", "zoom", "bearing"],
+      where: { userId },
+      _count: {
+        longitude: true,
+      },
+      orderBy: {
+        _count: {
+          longitude: "desc",
+        },
+      },
+      take: 3, // Get top 3 regions
+    });
+
+    return result.map((region) => ({
+      longitude: region.longitude,
+      latitude: region.latitude,
+      frequency: region._count.longitude,
+      title: region.title,
+      imageUrl: region.imageUrl,
+      pitch: region.pitch,
+      zoom: region.zoom,
+      bearing: region.bearing,
+    }));
+  }
+}
+
+
+path-file-name-content: mapCaptureRepository.ts - import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export class MapCaptureRepository {
+  async saveCapture(data: {
+    userId: string;
+    title: string;
+    longitude: number;
+    latitude: number;
+    zoom: number;
+    bearing: number;
+    pitch: number;
+    imageUrl: string;
+  }) {
+    return prisma.mapCapture.create({
+      data,
+    });
+  }
+
+  async findAllCaptures() {
+    return prisma.mapCapture.findMany();
+  }
+
+  async findAllCapturesByUserId(userId: string, skip: number, take: number) {
+    return prisma.mapCapture.findMany({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip,
+      take,
+    });
+  }
+
+  async findCaptureById(id: string) {
+    return prisma.mapCapture.findUnique({
+      where: { id },
+    });
+  }
+
+  async findLatestCaptureByUserId(userId: string) {
+    return prisma.mapCapture.findFirst({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  async findTopCapturedRegions(userId: string) {
+    const result = await prisma.mapCapture.groupBy({
+      by: ["longitude", "latitude", "title", "imageUrl", "pitch", "zoom", "bearing"],
+      where: { userId },
+      _count: {
+        longitude: true,
+      },
+      orderBy: {
+        _count: {
+          longitude: "desc",
+        },
+      },
+      take: 3, // Get top 3 regions
+    });
+
+    return result.map((region) => ({
+      longitude: region.longitude,
+      latitude: region.latitude,
+      frequency: region._count.longitude,
+      title: region.title,
+      imageUrl: region.imageUrl,
+      pitch: region.pitch,
+      zoom: region.zoom,
+      bearing: region.bearing,
+    }));
+  }
+}
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/map-capture/mapCaptureRouter.ts
+
+path-file-content: import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
+import { authenticateToken } from "@/common/middleware/authenticateToken";
+import { validateRequest } from "@/common/utils/httpHandlers";
+import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import express, { type Router } from "express";
+import { mapCaptureController } from "./mapCaptureController";
+import { MapCaptureResponseSchema, MapCaptureSchema } from "./mapCaptureModel";
+
+export const mapCaptureRegistry = new OpenAPIRegistry();
+export const mapCaptureRouter: Router = express.Router();
+
+mapCaptureRegistry.register("MapCapture", MapCaptureSchema);
+
+// Authenticate all routes in this router
+mapCaptureRouter.use(authenticateToken);
+
+// POST save map capture
+mapCaptureRegistry.registerPath({
+  method: "post",
+  path: "/map-captures",
+  tags: ["Map Capture"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: MapCaptureSchema,
+        },
+      },
+    },
+  },
+  responses: createApiResponse(MapCaptureResponseSchema, "Map capture saved successfully"),
+});
+
+// GET all captures
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema.array(), "Map captures retrieved successfully"), // Updated to .array()
+});
+
+// GET latest map capture
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/user/latest",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema, "Latest map capture retrieved successfully"),
+});
+
+// GET top regions
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/top-regions",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema.array(), "Top captured regions retrieved successfully"), // Updated to .array()
+});
+
+// GET specific capture by ID
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/{id}",
+  tags: ["Map Capture"],
+  parameters: [
+    {
+      name: "id",
+      in: "path",
+      required: true,
+      schema: {
+        type: "string",
+      },
+    },
+  ],
+  responses: createApiResponse(MapCaptureResponseSchema, "Map capture retrieved successfully"),
+});
+
+// POST endpoint to save the map capture
+mapCaptureRouter.post("/", validateRequest(MapCaptureSchema), mapCaptureController.saveCapture);
+
+// GET endpoint to retrieve all map captures of the user
+mapCaptureRouter.get("/", mapCaptureController.getAllUserCaptures);
+
+// GET endpoint to retrieve the latest map capture
+mapCaptureRouter.get("/user/latest", mapCaptureController.getLatestCaptureByUserId);
+
+// GET endpoint to retrieve top regions
+mapCaptureRouter.get("/top-regions", mapCaptureController.getTopCapturedRegions);
+
+// GET endpoint to retrieve a specific map capture by ID
+mapCaptureRouter.get("/:id", mapCaptureController.getCaptureById); // This must be last to avoid conflicts
+
+
+path-file-name-content: mapCaptureRouter.ts - import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
+import { authenticateToken } from "@/common/middleware/authenticateToken";
+import { validateRequest } from "@/common/utils/httpHandlers";
+import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import express, { type Router } from "express";
+import { mapCaptureController } from "./mapCaptureController";
+import { MapCaptureResponseSchema, MapCaptureSchema } from "./mapCaptureModel";
+
+export const mapCaptureRegistry = new OpenAPIRegistry();
+export const mapCaptureRouter: Router = express.Router();
+
+mapCaptureRegistry.register("MapCapture", MapCaptureSchema);
+
+// Authenticate all routes in this router
+mapCaptureRouter.use(authenticateToken);
+
+// POST save map capture
+mapCaptureRegistry.registerPath({
+  method: "post",
+  path: "/map-captures",
+  tags: ["Map Capture"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: MapCaptureSchema,
+        },
+      },
+    },
+  },
+  responses: createApiResponse(MapCaptureResponseSchema, "Map capture saved successfully"),
+});
+
+// GET all captures
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema.array(), "Map captures retrieved successfully"), // Updated to .array()
+});
+
+// GET latest map capture
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/user/latest",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema, "Latest map capture retrieved successfully"),
+});
+
+// GET top regions
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/top-regions",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema.array(), "Top captured regions retrieved successfully"), // Updated to .array()
+});
+
+// GET specific capture by ID
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/{id}",
+  tags: ["Map Capture"],
+  parameters: [
+    {
+      name: "id",
+      in: "path",
+      required: true,
+      schema: {
+        type: "string",
+      },
+    },
+  ],
+  responses: createApiResponse(MapCaptureResponseSchema, "Map capture retrieved successfully"),
+});
+
+// POST endpoint to save the map capture
+mapCaptureRouter.post("/", validateRequest(MapCaptureSchema), mapCaptureController.saveCapture);
+
+// GET endpoint to retrieve all map captures of the user
+mapCaptureRouter.get("/", mapCaptureController.getAllUserCaptures);
+
+// GET endpoint to retrieve the latest map capture
+mapCaptureRouter.get("/user/latest", mapCaptureController.getLatestCaptureByUserId);
+
+// GET endpoint to retrieve top regions
+mapCaptureRouter.get("/top-regions", mapCaptureController.getTopCapturedRegions);
+
+// GET endpoint to retrieve a specific map capture by ID
+mapCaptureRouter.get("/:id", mapCaptureController.getCaptureById); // This must be last to avoid conflicts
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api/map-capture/mapCaptureService.ts
+
+path-file-content: import { ServiceResponse } from "@/common/models/serviceResponse";
+import type { MapCapture } from "@prisma/client";
+import { StatusCodes } from "http-status-codes";
+import NodeCache from "node-cache";
+import { MapCaptureRepository } from "./mapCaptureRepository";
+
+export class MapCaptureService {
+  private mapCaptureRepository: MapCaptureRepository;
+  private cache: NodeCache;
+
+  constructor(repository: MapCaptureRepository = new MapCaptureRepository()) {
+    this.mapCaptureRepository = repository;
+    this.cache = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
+  }
+
+  async saveCapture(
+    userId: string,
+    data: {
+      title: string;
+      longitude: number;
+      latitude: number;
+      zoom: number;
+      bearing: number;
+      pitch: number;
+      imageUrl: string;
+    },
+  ) {
+    try {
+      const capture = await this.mapCaptureRepository.saveCapture({ userId, ...data });
+      return ServiceResponse.success("Map capture saved successfully", capture, StatusCodes.CREATED);
+    } catch (error) {
+      console.error("Error saving map capture:", error);
+      return ServiceResponse.failure("Failed to save map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getAllCaptures() {
+    try {
+      const captures = await this.mapCaptureRepository.findAllCaptures();
+      return ServiceResponse.success("Map captures retrieved successfully", captures, StatusCodes.OK);
+    } catch (error) {
+      console.error("Error retrieving map captures:", error);
+      return ServiceResponse.failure("Failed to retrieve map captures.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getAllCapturesByUserId(userId: string, page: number, limit: number) {
+    try {
+      const skip = (page - 1) * limit;
+      const captures = await this.mapCaptureRepository.findAllCapturesByUserId(userId, skip, limit);
+
+      return ServiceResponse.success("Captures retrieved successfully", captures);
+    } catch (error) {
+      return ServiceResponse.failure("Failed to retrieve map captures", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getCaptureById(id: string) {
+    try {
+      const capture = await this.mapCaptureRepository.findCaptureById(id);
+      if (!capture) {
+        return ServiceResponse.failure("Map capture not found", null, StatusCodes.NOT_FOUND);
+      }
+      return ServiceResponse.success("Map capture retrieved successfully", capture, StatusCodes.OK);
+    } catch (error) {
+      console.error("Error retrieving map capture:", error);
+      return ServiceResponse.failure("Failed to retrieve map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getLatestCaptureByUserId(userId: string) {
+    try {
+      const latestCapture = await this.mapCaptureRepository.findLatestCaptureByUserId(userId);
+
+      if (!latestCapture) {
+        return ServiceResponse.failure("No captures found for this user.", null, StatusCodes.NOT_FOUND);
+      }
+
+      return ServiceResponse.success("Latest map capture retrieved successfully", latestCapture, StatusCodes.OK);
+    } catch (error) {
+      console.log("Error retrieving latest map capture:", error);
+
+      return ServiceResponse.failure("Failed to retrieve latest map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getTopCapturedRegions(userId: string) {
+    const cacheKey = `topCapturedRegions_${userId}`;
+    const cachedData = this.cache.get(cacheKey);
+
+    if (cachedData) {
+      return ServiceResponse.success("Top captured regions retrieved from cache", cachedData, StatusCodes.OK);
+    }
+
+    try {
+      // Perform aggregation directly in the database
+      const topRegions = await this.mapCaptureRepository.findTopCapturedRegions(userId);
+
+      if (topRegions.length === 0) {
+        return ServiceResponse.failure("No captures found for this user.", null, StatusCodes.NOT_FOUND);
+      }
+
+      // Cache the result
+      this.cache.set(cacheKey, topRegions);
+
+      return ServiceResponse.success("Top captured regions retrieved successfully", topRegions, StatusCodes.OK);
+    } catch (error) {
+      console.log("Error retrieving top captured regions:", error);
+      return ServiceResponse.failure(
+        "Failed to retrieve top captured regions.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+}
+
+export const mapCaptureService = new MapCaptureService();
+
+
+path-file-name-content: mapCaptureService.ts - import { ServiceResponse } from "@/common/models/serviceResponse";
+import type { MapCapture } from "@prisma/client";
+import { StatusCodes } from "http-status-codes";
+import NodeCache from "node-cache";
+import { MapCaptureRepository } from "./mapCaptureRepository";
+
+export class MapCaptureService {
+  private mapCaptureRepository: MapCaptureRepository;
+  private cache: NodeCache;
+
+  constructor(repository: MapCaptureRepository = new MapCaptureRepository()) {
+    this.mapCaptureRepository = repository;
+    this.cache = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
+  }
+
+  async saveCapture(
+    userId: string,
+    data: {
+      title: string;
+      longitude: number;
+      latitude: number;
+      zoom: number;
+      bearing: number;
+      pitch: number;
+      imageUrl: string;
+    },
+  ) {
+    try {
+      const capture = await this.mapCaptureRepository.saveCapture({ userId, ...data });
+      return ServiceResponse.success("Map capture saved successfully", capture, StatusCodes.CREATED);
+    } catch (error) {
+      console.error("Error saving map capture:", error);
+      return ServiceResponse.failure("Failed to save map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getAllCaptures() {
+    try {
+      const captures = await this.mapCaptureRepository.findAllCaptures();
+      return ServiceResponse.success("Map captures retrieved successfully", captures, StatusCodes.OK);
+    } catch (error) {
+      console.error("Error retrieving map captures:", error);
+      return ServiceResponse.failure("Failed to retrieve map captures.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getAllCapturesByUserId(userId: string, page: number, limit: number) {
+    try {
+      const skip = (page - 1) * limit;
+      const captures = await this.mapCaptureRepository.findAllCapturesByUserId(userId, skip, limit);
+
+      return ServiceResponse.success("Captures retrieved successfully", captures);
+    } catch (error) {
+      return ServiceResponse.failure("Failed to retrieve map captures", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getCaptureById(id: string) {
+    try {
+      const capture = await this.mapCaptureRepository.findCaptureById(id);
+      if (!capture) {
+        return ServiceResponse.failure("Map capture not found", null, StatusCodes.NOT_FOUND);
+      }
+      return ServiceResponse.success("Map capture retrieved successfully", capture, StatusCodes.OK);
+    } catch (error) {
+      console.error("Error retrieving map capture:", error);
+      return ServiceResponse.failure("Failed to retrieve map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getLatestCaptureByUserId(userId: string) {
+    try {
+      const latestCapture = await this.mapCaptureRepository.findLatestCaptureByUserId(userId);
+
+      if (!latestCapture) {
+        return ServiceResponse.failure("No captures found for this user.", null, StatusCodes.NOT_FOUND);
+      }
+
+      return ServiceResponse.success("Latest map capture retrieved successfully", latestCapture, StatusCodes.OK);
+    } catch (error) {
+      console.log("Error retrieving latest map capture:", error);
+
+      return ServiceResponse.failure("Failed to retrieve latest map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getTopCapturedRegions(userId: string) {
+    const cacheKey = `topCapturedRegions_${userId}`;
+    const cachedData = this.cache.get(cacheKey);
+
+    if (cachedData) {
+      return ServiceResponse.success("Top captured regions retrieved from cache", cachedData, StatusCodes.OK);
+    }
+
+    try {
+      // Perform aggregation directly in the database
+      const topRegions = await this.mapCaptureRepository.findTopCapturedRegions(userId);
+
+      if (topRegions.length === 0) {
+        return ServiceResponse.failure("No captures found for this user.", null, StatusCodes.NOT_FOUND);
+      }
+
+      // Cache the result
+      this.cache.set(cacheKey, topRegions);
+
+      return ServiceResponse.success("Top captured regions retrieved successfully", topRegions, StatusCodes.OK);
+    } catch (error) {
+      console.log("Error retrieving top captured regions:", error);
+      return ServiceResponse.failure(
+        "Failed to retrieve top captured regions.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+}
+
+export const mapCaptureService = new MapCaptureService();
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api-docs/__tests__/openAPIRouter.test.ts
+
+path-file-content: import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+
+import { app } from "@/server";
+
+import { generateOpenAPIDocument } from "../openAPIDocumentGenerator";
+
+describe("OpenAPI Router", () => {
+  describe("Swagger JSON route", () => {
+    it("should return Swagger JSON content", async () => {
+      // Arrange
+      const expectedResponse = generateOpenAPIDocument();
+
+      // Act
+      const response = await request(app).get("/swagger.json");
+
+      // Assert
+      expect(response.status).toBe(StatusCodes.OK);
+      expect(response.type).toBe("application/json");
+      expect(response.body).toEqual(expectedResponse);
+    });
+
+    it("should serve the Swagger UI", async () => {
+      // Act
+      const response = await request(app).get("/");
+
+      // Assert
+      expect(response.status).toBe(StatusCodes.OK);
+      expect(response.text).toContain("swagger-ui");
+    });
+  });
+});
+
+
+path-file-name-content: openAPIRouter.test.ts - import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+
+import { app } from "@/server";
+
+import { generateOpenAPIDocument } from "../openAPIDocumentGenerator";
+
+describe("OpenAPI Router", () => {
+  describe("Swagger JSON route", () => {
+    it("should return Swagger JSON content", async () => {
+      // Arrange
+      const expectedResponse = generateOpenAPIDocument();
+
+      // Act
+      const response = await request(app).get("/swagger.json");
+
+      // Assert
+      expect(response.status).toBe(StatusCodes.OK);
+      expect(response.type).toBe("application/json");
+      expect(response.body).toEqual(expectedResponse);
+    });
+
+    it("should serve the Swagger UI", async () => {
+      // Act
+      const response = await request(app).get("/");
+
+      // Assert
+      expect(response.status).toBe(StatusCodes.OK);
+      expect(response.text).toContain("swagger-ui");
+    });
+  });
+});
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api-docs/openAPIDocumentGenerator.ts
+
+path-file-content: import { OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
+
+import { authRegistry } from "@/api/auth/authRouter";
+import { healthCheckRegistry } from "@/api/healthCheck/healthCheckRouter";
+import { mapCaptureRegistry } from "@/api/map-capture/mapCaptureRouter";
+
+export function generateOpenAPIDocument() {
+  const registry = new OpenAPIRegistry([healthCheckRegistry, authRegistry, mapCaptureRegistry]);
+  const generator = new OpenApiGeneratorV3(registry.definitions);
+
+  return generator.generateDocument({
+    openapi: "3.0.0",
+    info: {
+      version: "1.0.0",
+      title: "Swagger API",
+    },
+
+    externalDocs: {
+      description: "View the raw OpenAPI Specification in JSON format",
+      url: "/swagger.json",
+    },
+  });
+}
+
+
+path-file-name-content: openAPIDocumentGenerator.ts - import { OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
+
+import { authRegistry } from "@/api/auth/authRouter";
+import { healthCheckRegistry } from "@/api/healthCheck/healthCheckRouter";
+import { mapCaptureRegistry } from "@/api/map-capture/mapCaptureRouter";
+
+export function generateOpenAPIDocument() {
+  const registry = new OpenAPIRegistry([healthCheckRegistry, authRegistry, mapCaptureRegistry]);
+  const generator = new OpenApiGeneratorV3(registry.definitions);
+
+  return generator.generateDocument({
+    openapi: "3.0.0",
+    info: {
+      version: "1.0.0",
+      title: "Swagger API",
+    },
+
+    externalDocs: {
+      description: "View the raw OpenAPI Specification in JSON format",
+      url: "/swagger.json",
+    },
+  });
+}
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api-docs/openAPIResponseBuilders.ts
+
+path-file-content: import { StatusCodes } from "http-status-codes";
+import type { z } from "zod";
+
+import { ServiceResponseSchema } from "@/common/models/serviceResponse";
+
+export function createApiResponse(schema: z.ZodTypeAny, description: string, statusCode = StatusCodes.OK) {
+  return {
+    [statusCode]: {
+      description,
+      content: {
+        "application/json": {
+          schema: ServiceResponseSchema(schema),
+        },
+      },
+    },
+  };
+}
+
+
+path-file-name-content: openAPIResponseBuilders.ts - import { StatusCodes } from "http-status-codes";
+import type { z } from "zod";
+
+import { ServiceResponseSchema } from "@/common/models/serviceResponse";
+
+export function createApiResponse(schema: z.ZodTypeAny, description: string, statusCode = StatusCodes.OK) {
+  return {
+    [statusCode]: {
+      description,
+      content: {
+        "application/json": {
+          schema: ServiceResponseSchema(schema),
+        },
+      },
+    },
+  };
+}
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/api-docs/openAPIRouter.ts
+
+path-file-content: import express, { type Request, type Response, type Router } from "express";
+import swaggerUi from "swagger-ui-express";
+
+import { generateOpenAPIDocument } from "@/api-docs/openAPIDocumentGenerator";
+
+export const openAPIRouter: Router = express.Router();
+const openAPIDocument = generateOpenAPIDocument();
+
+openAPIRouter.get("/swagger.json", (_req: Request, res: Response) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(openAPIDocument);
+});
+
+openAPIRouter.use("/", swaggerUi.serve, swaggerUi.setup(openAPIDocument));
+
+
+path-file-name-content: openAPIRouter.ts - import express, { type Request, type Response, type Router } from "express";
+import swaggerUi from "swagger-ui-express";
+
+import { generateOpenAPIDocument } from "@/api-docs/openAPIDocumentGenerator";
+
+export const openAPIRouter: Router = express.Router();
+const openAPIDocument = generateOpenAPIDocument();
+
+openAPIRouter.get("/swagger.json", (_req: Request, res: Response) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(openAPIDocument);
+});
+
+openAPIRouter.use("/", swaggerUi.serve, swaggerUi.setup(openAPIDocument));
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/__tests__/errorHandler.test.ts
+
+path-file-content: import express, { type Express } from "express";
+import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+
+import errorHandler from "@/common/middleware/errorHandler";
+
+describe("Error Handler Middleware", () => {
+  let app: Express;
+
+  beforeAll(() => {
+    app = express();
+
+    app.get("/error", () => {
+      throw new Error("Test error");
+    });
+    app.get("/next-error", (_req, _res, next) => {
+      const error = new Error("Error passed to next()");
+      next(error);
+    });
+
+    app.use(errorHandler());
+    app.use("*", (req, res) => res.status(StatusCodes.NOT_FOUND).send("Not Found"));
+  });
+
+  describe("Handling unknown routes", () => {
+    it("returns 404 for unknown routes", async () => {
+      const response = await request(app).get("/this-route-does-not-exist");
+      expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    });
+  });
+
+  describe("Handling thrown errors", () => {
+    it("handles thrown errors with a 500 status code", async () => {
+      const response = await request(app).get("/error");
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+    });
+  });
+
+  describe("Handling errors passed to next()", () => {
+    it("handles errors passed to next() with a 500 status code", async () => {
+      const response = await request(app).get("/next-error");
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+    });
+  });
+});
+
+
+path-file-name-content: errorHandler.test.ts - import express, { type Express } from "express";
+import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+
+import errorHandler from "@/common/middleware/errorHandler";
+
+describe("Error Handler Middleware", () => {
+  let app: Express;
+
+  beforeAll(() => {
+    app = express();
+
+    app.get("/error", () => {
+      throw new Error("Test error");
+    });
+    app.get("/next-error", (_req, _res, next) => {
+      const error = new Error("Error passed to next()");
+      next(error);
+    });
+
+    app.use(errorHandler());
+    app.use("*", (req, res) => res.status(StatusCodes.NOT_FOUND).send("Not Found"));
+  });
+
+  describe("Handling unknown routes", () => {
+    it("returns 404 for unknown routes", async () => {
+      const response = await request(app).get("/this-route-does-not-exist");
+      expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    });
+  });
+
+  describe("Handling thrown errors", () => {
+    it("handles thrown errors with a 500 status code", async () => {
+      const response = await request(app).get("/error");
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+    });
+  });
+
+  describe("Handling errors passed to next()", () => {
+    it("handles errors passed to next() with a 500 status code", async () => {
+      const response = await request(app).get("/next-error");
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+    });
+  });
+});
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/__tests__/requestLogger.test.ts
+
+path-file-content: import express from "express";
+import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+
+import errorHandler from "@/common/middleware/errorHandler";
+import requestLogger from "@/common/middleware/requestLogger";
+
+describe("Request Logger Middleware", () => {
+  const app = express();
+
+  beforeAll(() => {
+    app.use(requestLogger);
+    app.get("/success", (req, res) => res.status(StatusCodes.OK).send("Success"));
+    app.get("/redirect", (req, res) => res.redirect("/success"));
+    app.get("/error", () => {
+      throw new Error("Test error");
+    });
+    app.use(errorHandler());
+  });
+
+  describe("Successful requests", () => {
+    it("logs successful requests", async () => {
+      const response = await request(app).get("/success");
+      expect(response.status).toBe(StatusCodes.OK);
+    });
+
+    it("checks existing request id", async () => {
+      const requestId = "test-request-id";
+      const response = await request(app).get("/success").set("X-Request-Id", requestId);
+      expect(response.status).toBe(StatusCodes.OK);
+    });
+  });
+
+  describe("Re-directions", () => {
+    it("logs re-directions correctly", async () => {
+      const response = await request(app).get("/redirect");
+      expect(response.status).toBe(StatusCodes.MOVED_TEMPORARILY);
+    });
+  });
+
+  describe("Error handling", () => {
+    it("logs thrown errors with a 500 status code", async () => {
+      const response = await request(app).get("/error");
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+    });
+
+    it("logs 404 for unknown routes", async () => {
+      const response = await request(app).get("/unknown");
+      expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    });
+  });
+});
+
+
+path-file-name-content: requestLogger.test.ts - import express from "express";
+import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+
+import errorHandler from "@/common/middleware/errorHandler";
+import requestLogger from "@/common/middleware/requestLogger";
+
+describe("Request Logger Middleware", () => {
+  const app = express();
+
+  beforeAll(() => {
+    app.use(requestLogger);
+    app.get("/success", (req, res) => res.status(StatusCodes.OK).send("Success"));
+    app.get("/redirect", (req, res) => res.redirect("/success"));
+    app.get("/error", () => {
+      throw new Error("Test error");
+    });
+    app.use(errorHandler());
+  });
+
+  describe("Successful requests", () => {
+    it("logs successful requests", async () => {
+      const response = await request(app).get("/success");
+      expect(response.status).toBe(StatusCodes.OK);
+    });
+
+    it("checks existing request id", async () => {
+      const requestId = "test-request-id";
+      const response = await request(app).get("/success").set("X-Request-Id", requestId);
+      expect(response.status).toBe(StatusCodes.OK);
+    });
+  });
+
+  describe("Re-directions", () => {
+    it("logs re-directions correctly", async () => {
+      const response = await request(app).get("/redirect");
+      expect(response.status).toBe(StatusCodes.MOVED_TEMPORARILY);
+    });
+  });
+
+  describe("Error handling", () => {
+    it("logs thrown errors with a 500 status code", async () => {
+      const response = await request(app).get("/error");
+      expect(response.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+    });
+
+    it("logs 404 for unknown routes", async () => {
+      const response = await request(app).get("/unknown");
+      expect(response.status).toBe(StatusCodes.NOT_FOUND);
+    });
+  });
+});
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/middleware/authenticateToken.ts
+
+path-file-content: import type { User } from "@prisma/client";
+import type { NextFunction, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import { verifyToken } from "../utils/jwtUtils";
+import { ServiceResponse } from "./../models/serviceResponse";
+import type { AuthenticatedRequest } from "./../types";
+
+export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json(ServiceResponse.failure("Access denied. No token provided.", null, StatusCodes.UNAUTHORIZED));
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = verifyToken(token) as { userId: string; iat: number; exp: number };
+    req.user = { id: decoded.userId } as User;
+
+    console.log("Decoded user from token:", decoded);
+    console.log("User ID:", req.user.id);
+
+    next();
+  } catch (err) {
+    if (err instanceof TokenExpiredError) {
+      console.error("Token expired:", err.message);
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json(ServiceResponse.failure("Token expired.", null, StatusCodes.UNAUTHORIZED));
+    } else if (err instanceof JsonWebTokenError) {
+      console.error("Invalid token:", err.message);
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json(ServiceResponse.failure("Invalid token.", null, StatusCodes.FORBIDDEN));
+    } else {
+      console.error("Token verification failed:", err);
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json(ServiceResponse.failure("Token verification failed.", null, StatusCodes.INTERNAL_SERVER_ERROR));
+    }
+  }
+};
+
+
+path-file-name-content: authenticateToken.ts - import type { User } from "@prisma/client";
+import type { NextFunction, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import { verifyToken } from "../utils/jwtUtils";
+import { ServiceResponse } from "./../models/serviceResponse";
+import type { AuthenticatedRequest } from "./../types";
+
+export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json(ServiceResponse.failure("Access denied. No token provided.", null, StatusCodes.UNAUTHORIZED));
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = verifyToken(token) as { userId: string; iat: number; exp: number };
+    req.user = { id: decoded.userId } as User;
+
+    console.log("Decoded user from token:", decoded);
+    console.log("User ID:", req.user.id);
+
+    next();
+  } catch (err) {
+    if (err instanceof TokenExpiredError) {
+      console.error("Token expired:", err.message);
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json(ServiceResponse.failure("Token expired.", null, StatusCodes.UNAUTHORIZED));
+    } else if (err instanceof JsonWebTokenError) {
+      console.error("Invalid token:", err.message);
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json(ServiceResponse.failure("Invalid token.", null, StatusCodes.FORBIDDEN));
+    } else {
+      console.error("Token verification failed:", err);
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json(ServiceResponse.failure("Token verification failed.", null, StatusCodes.INTERNAL_SERVER_ERROR));
+    }
+  }
+};
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/middleware/errorHandler.ts
+
+path-file-content: import type { ErrorRequestHandler, RequestHandler } from "express";
+import { StatusCodes } from "http-status-codes";
+
+const unexpectedRequest: RequestHandler = (_req, res) => {
+  res.sendStatus(StatusCodes.NOT_FOUND);
+};
+
+const addErrorToRequestLog: ErrorRequestHandler = (err, _req, res, next) => {
+  res.locals.err = err;
+  next(err);
+};
+
+export default () => [unexpectedRequest, addErrorToRequestLog];
+
+
+path-file-name-content: errorHandler.ts - import type { ErrorRequestHandler, RequestHandler } from "express";
+import { StatusCodes } from "http-status-codes";
+
+const unexpectedRequest: RequestHandler = (_req, res) => {
+  res.sendStatus(StatusCodes.NOT_FOUND);
+};
+
+const addErrorToRequestLog: ErrorRequestHandler = (err, _req, res, next) => {
+  res.locals.err = err;
+  next(err);
+};
+
+export default () => [unexpectedRequest, addErrorToRequestLog];
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/middleware/rateLimiter.ts
+
+path-file-content: import type { Request } from "express";
+import { rateLimit } from "express-rate-limit";
+
+import { env } from "@/common/utils/envConfig";
+
+const rateLimiter = rateLimit({
+  legacyHeaders: true,
+  limit: env.COMMON_RATE_LIMIT_MAX_REQUESTS,
+  message: "Too many requests, please try again later.",
+  standardHeaders: true,
+  windowMs: 15 * 60 * env.COMMON_RATE_LIMIT_WINDOW_MS,
+  keyGenerator: (req: Request) => req.ip as string,
+});
+
+export default rateLimiter;
+
+
+path-file-name-content: rateLimiter.ts - import type { Request } from "express";
+import { rateLimit } from "express-rate-limit";
+
+import { env } from "@/common/utils/envConfig";
+
+const rateLimiter = rateLimit({
+  legacyHeaders: true,
+  limit: env.COMMON_RATE_LIMIT_MAX_REQUESTS,
+  message: "Too many requests, please try again later.",
+  standardHeaders: true,
+  windowMs: 15 * 60 * env.COMMON_RATE_LIMIT_WINDOW_MS,
+  keyGenerator: (req: Request) => req.ip as string,
+});
+
+export default rateLimiter;
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/middleware/requestLogger.ts
+
+path-file-content: import { randomUUID } from "node:crypto";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import type { Request, RequestHandler, Response } from "express";
+import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import type { LevelWithSilent } from "pino";
+import { type CustomAttributeKeys, type Options, pinoHttp } from "pino-http";
+
+import { env } from "@/common/utils/envConfig";
+
+enum LogLevel {
+  Fatal = "fatal",
+  Error = "error",
+  Warn = "warn",
+  Info = "info",
+  Debug = "debug",
+  Trace = "trace",
+  Silent = "silent",
+}
+
+type PinoCustomProps = {
+  request: Request;
+  response: Response;
+  error: Error;
+  responseBody: unknown;
+};
+
+const requestLogger = (options?: Options): RequestHandler[] => {
+  const pinoOptions: Options = {
+    enabled: env.isProduction,
+    customProps: customProps as unknown as Options["customProps"],
+    redact: [],
+    genReqId,
+    customLogLevel,
+    customSuccessMessage,
+    customReceivedMessage: (req) => `request received: ${req.method}`,
+    customErrorMessage: (_req, res) => `request errored with status code: ${res.statusCode}`,
+    customAttributeKeys,
+    ...options,
+  };
+  return [responseBodyMiddleware, pinoHttp(pinoOptions)];
+};
+
+const customAttributeKeys: CustomAttributeKeys = {
+  req: "request",
+  res: "response",
+  err: "error",
+  responseTime: "timeTaken",
+};
+
+const customProps = (req: Request, res: Response): PinoCustomProps => ({
+  request: req,
+  response: res,
+  error: res.locals.err,
+  responseBody: res.locals.responseBody,
+});
+
+const responseBodyMiddleware: RequestHandler = (_req, res, next) => {
+  const isNotProduction = !env.isProduction;
+  if (isNotProduction) {
+    const originalSend = res.send;
+    res.send = (content) => {
+      res.locals.responseBody = content;
+      res.send = originalSend;
+      return originalSend.call(res, content);
+    };
+  }
+  next();
+};
+
+const customLogLevel = (_req: IncomingMessage, res: ServerResponse<IncomingMessage>, err?: Error): LevelWithSilent => {
+  if (err || res.statusCode >= StatusCodes.INTERNAL_SERVER_ERROR) return LogLevel.Error;
+  if (res.statusCode >= StatusCodes.BAD_REQUEST) return LogLevel.Warn;
+  if (res.statusCode >= StatusCodes.MULTIPLE_CHOICES) return LogLevel.Silent;
+  return LogLevel.Info;
+};
+
+const customSuccessMessage = (req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
+  if (res.statusCode === StatusCodes.NOT_FOUND) return getReasonPhrase(StatusCodes.NOT_FOUND);
+  return `${req.method} completed`;
+};
+
+const genReqId = (req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
+  const existingID = req.id ?? req.headers["x-request-id"];
+  if (existingID) return existingID;
+  const id = randomUUID();
+  res.setHeader("X-Request-Id", id);
+  return id;
+};
+
+export default requestLogger();
+
+
+path-file-name-content: requestLogger.ts - import { randomUUID } from "node:crypto";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import type { Request, RequestHandler, Response } from "express";
+import { StatusCodes, getReasonPhrase } from "http-status-codes";
+import type { LevelWithSilent } from "pino";
+import { type CustomAttributeKeys, type Options, pinoHttp } from "pino-http";
+
+import { env } from "@/common/utils/envConfig";
+
+enum LogLevel {
+  Fatal = "fatal",
+  Error = "error",
+  Warn = "warn",
+  Info = "info",
+  Debug = "debug",
+  Trace = "trace",
+  Silent = "silent",
+}
+
+type PinoCustomProps = {
+  request: Request;
+  response: Response;
+  error: Error;
+  responseBody: unknown;
+};
+
+const requestLogger = (options?: Options): RequestHandler[] => {
+  const pinoOptions: Options = {
+    enabled: env.isProduction,
+    customProps: customProps as unknown as Options["customProps"],
+    redact: [],
+    genReqId,
+    customLogLevel,
+    customSuccessMessage,
+    customReceivedMessage: (req) => `request received: ${req.method}`,
+    customErrorMessage: (_req, res) => `request errored with status code: ${res.statusCode}`,
+    customAttributeKeys,
+    ...options,
+  };
+  return [responseBodyMiddleware, pinoHttp(pinoOptions)];
+};
+
+const customAttributeKeys: CustomAttributeKeys = {
+  req: "request",
+  res: "response",
+  err: "error",
+  responseTime: "timeTaken",
+};
+
+const customProps = (req: Request, res: Response): PinoCustomProps => ({
+  request: req,
+  response: res,
+  error: res.locals.err,
+  responseBody: res.locals.responseBody,
+});
+
+const responseBodyMiddleware: RequestHandler = (_req, res, next) => {
+  const isNotProduction = !env.isProduction;
+  if (isNotProduction) {
+    const originalSend = res.send;
+    res.send = (content) => {
+      res.locals.responseBody = content;
+      res.send = originalSend;
+      return originalSend.call(res, content);
+    };
+  }
+  next();
+};
+
+const customLogLevel = (_req: IncomingMessage, res: ServerResponse<IncomingMessage>, err?: Error): LevelWithSilent => {
+  if (err || res.statusCode >= StatusCodes.INTERNAL_SERVER_ERROR) return LogLevel.Error;
+  if (res.statusCode >= StatusCodes.BAD_REQUEST) return LogLevel.Warn;
+  if (res.statusCode >= StatusCodes.MULTIPLE_CHOICES) return LogLevel.Silent;
+  return LogLevel.Info;
+};
+
+const customSuccessMessage = (req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
+  if (res.statusCode === StatusCodes.NOT_FOUND) return getReasonPhrase(StatusCodes.NOT_FOUND);
+  return `${req.method} completed`;
+};
+
+const genReqId = (req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
+  const existingID = req.id ?? req.headers["x-request-id"];
+  if (existingID) return existingID;
+  const id = randomUUID();
+  res.setHeader("X-Request-Id", id);
+  return id;
+};
+
+export default requestLogger();
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/models/serviceResponse.ts
+
+path-file-content: import { StatusCodes } from "http-status-codes";
+import { z } from "zod";
+
+export class ServiceResponse<T = null> {
+  readonly success: boolean;
+  readonly message: string;
+  readonly responseObject: T;
+  readonly statusCode: number;
+
+  private constructor(success: boolean, message: string, responseObject: T, statusCode: number) {
+    this.success = success;
+    this.message = message;
+    this.responseObject = responseObject;
+    this.statusCode = statusCode;
+  }
+
+  static success<T>(message: string, responseObject: T, statusCode: number = StatusCodes.OK) {
+    return new ServiceResponse(true, message, responseObject, statusCode);
+  }
+
+  static failure<T>(message: string, responseObject: T, statusCode: number = StatusCodes.BAD_REQUEST) {
+    return new ServiceResponse(false, message, responseObject, statusCode);
+  }
+}
+
+export const ServiceResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.boolean(),
+    message: z.string(),
+    responseObject: dataSchema.optional(),
+    statusCode: z.number(),
+  });
+
+
+path-file-name-content: serviceResponse.ts - import { StatusCodes } from "http-status-codes";
+import { z } from "zod";
+
+export class ServiceResponse<T = null> {
+  readonly success: boolean;
+  readonly message: string;
+  readonly responseObject: T;
+  readonly statusCode: number;
+
+  private constructor(success: boolean, message: string, responseObject: T, statusCode: number) {
+    this.success = success;
+    this.message = message;
+    this.responseObject = responseObject;
+    this.statusCode = statusCode;
+  }
+
+  static success<T>(message: string, responseObject: T, statusCode: number = StatusCodes.OK) {
+    return new ServiceResponse(true, message, responseObject, statusCode);
+  }
+
+  static failure<T>(message: string, responseObject: T, statusCode: number = StatusCodes.BAD_REQUEST) {
+    return new ServiceResponse(false, message, responseObject, statusCode);
+  }
+}
+
+export const ServiceResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.boolean(),
+    message: z.string(),
+    responseObject: dataSchema.optional(),
+    statusCode: z.number(),
+  });
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/types.ts
+
+path-file-content: import type { User } from "@prisma/client";
+import type { Request } from "express";
+
+export interface AuthenticatedRequest extends Request {
+  user?: User;
+}
+
+
+path-file-name-content: types.ts - import type { User } from "@prisma/client";
+import type { Request } from "express";
+
+export interface AuthenticatedRequest extends Request {
+  user?: User;
+}
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/utils/envConfig.ts
+
+path-file-content: import dotenv from "dotenv";
+import { cleanEnv, host, num, port, str, testOnly } from "envalid";
+
+dotenv.config();
+
+export const env = cleanEnv(process.env, {
+  NODE_ENV: str({ devDefault: testOnly("test"), choices: ["development", "production", "test"] }),
+  HOST: host({ devDefault: testOnly("localhost") }),
+  PORT: port({ devDefault: testOnly(3000) }),
+  CORS_ORIGIN: str({ devDefault: testOnly("http://localhost:5173") }),
+  COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(1000) }),
+  COMMON_RATE_LIMIT_WINDOW_MS: num({ devDefault: testOnly(1000) }),
+  DATABASE_URL: str(),
+  JWT_SECRET: str(),
+});
+
+
+path-file-name-content: envConfig.ts - import dotenv from "dotenv";
+import { cleanEnv, host, num, port, str, testOnly } from "envalid";
+
+dotenv.config();
+
+export const env = cleanEnv(process.env, {
+  NODE_ENV: str({ devDefault: testOnly("test"), choices: ["development", "production", "test"] }),
+  HOST: host({ devDefault: testOnly("localhost") }),
+  PORT: port({ devDefault: testOnly(3000) }),
+  CORS_ORIGIN: str({ devDefault: testOnly("http://localhost:5173") }),
+  COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(1000) }),
+  COMMON_RATE_LIMIT_WINDOW_MS: num({ devDefault: testOnly(1000) }),
+  DATABASE_URL: str(),
+  JWT_SECRET: str(),
+});
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/utils/httpHandlers.ts
+
+path-file-content: import type { NextFunction, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import type { ZodSchema } from "zod";
+
+import { ServiceResponse } from "@/common/models/serviceResponse";
+
+export const handleServiceResponse = (serviceResponse: ServiceResponse<any>, response: Response) => {
+  return response.status(serviceResponse.statusCode).send(serviceResponse);
+};
+
+export const validateRequest = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
+  // Validate using safeParse
+  const result = schema.safeParse(req.body);
+
+  if (!result.success) {
+    const zodError = result.error;
+
+    // Build a more detailed error message
+    const errorMessage = `Invalid input: ${zodError.errors.map((e) => `${e.path.join(".")} - ${e.message}`).join(", ")}`;
+    const statusCode = StatusCodes.BAD_REQUEST;
+
+    const serviceResponse = ServiceResponse.failure(errorMessage, null, statusCode);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  next();
+};
+
+
+path-file-name-content: httpHandlers.ts - import type { NextFunction, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import type { ZodSchema } from "zod";
+
+import { ServiceResponse } from "@/common/models/serviceResponse";
+
+export const handleServiceResponse = (serviceResponse: ServiceResponse<any>, response: Response) => {
+  return response.status(serviceResponse.statusCode).send(serviceResponse);
+};
+
+export const validateRequest = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
+  // Validate using safeParse
+  const result = schema.safeParse(req.body);
+
+  if (!result.success) {
+    const zodError = result.error;
+
+    // Build a more detailed error message
+    const errorMessage = `Invalid input: ${zodError.errors.map((e) => `${e.path.join(".")} - ${e.message}`).join(", ")}`;
+    const statusCode = StatusCodes.BAD_REQUEST;
+
+    const serviceResponse = ServiceResponse.failure(errorMessage, null, statusCode);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  next();
+};
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/common/utils/jwtUtils.ts
+
+path-file-content: import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import { env } from "./envConfig";
+
+const secret = env.JWT_SECRET;
+
+export function generateToken(userId: string): string {
+  return jwt.sign({ userId }, secret, { expiresIn: "1d" }); // Access token valid for 1 day
+}
+
+export function generateRefreshToken(userId: string): string {
+  return jwt.sign({ userId }, secret, { expiresIn: "7d" }); // Refresh token valid for 7 days
+}
+
+export function verifyToken(token: string, type: "access" | "refresh" = "access"): any {
+  try {
+    return jwt.verify(token, secret);
+  } catch (error) {
+    if (error instanceof TokenExpiredError) {
+      throw new TokenExpiredError("Token expired", error.expiredAt);
+    } else if (error instanceof JsonWebTokenError) {
+      throw new JsonWebTokenError("Invalid token");
+    } else {
+      throw new Error("Token verification failed");
+    }
+  }
+}
+
+
+path-file-name-content: jwtUtils.ts - import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import { env } from "./envConfig";
+
+const secret = env.JWT_SECRET;
+
+export function generateToken(userId: string): string {
+  return jwt.sign({ userId }, secret, { expiresIn: "1d" }); // Access token valid for 1 day
+}
+
+export function generateRefreshToken(userId: string): string {
+  return jwt.sign({ userId }, secret, { expiresIn: "7d" }); // Refresh token valid for 7 days
+}
+
+export function verifyToken(token: string, type: "access" | "refresh" = "access"): any {
+  try {
+    return jwt.verify(token, secret);
+  } catch (error) {
+    if (error instanceof TokenExpiredError) {
+      throw new TokenExpiredError("Token expired", error.expiredAt);
+    } else if (error instanceof JsonWebTokenError) {
+      throw new JsonWebTokenError("Invalid token");
+    } else {
+      throw new Error("Token verification failed");
+    }
+  }
+}
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/index.ts
+
+path-file-content: import { env } from "@/common/utils/envConfig";
+import { app, logger } from "@/server";
+
+const server = app.listen(env.PORT, () => {
+  const { NODE_ENV, HOST, PORT } = env;
+  logger.info(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}`);
+});
+
+const onCloseSignal = () => {
+  logger.info("sigint received, shutting down");
+  server.close(() => {
+    logger.info("server closed");
+    process.exit();
+  });
+  setTimeout(() => process.exit(1), 10000).unref(); // Force shutdown after 10s
+};
+
+process.on("SIGINT", onCloseSignal);
+process.on("SIGTERM", onCloseSignal);
+
+
+path-file-name-content: index.ts - import { env } from "@/common/utils/envConfig";
+import { app, logger } from "@/server";
+
+const server = app.listen(env.PORT, () => {
+  const { NODE_ENV, HOST, PORT } = env;
+  logger.info(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}`);
+});
+
+const onCloseSignal = () => {
+  logger.info("sigint received, shutting down");
+  server.close(() => {
+    logger.info("server closed");
+    process.exit();
+  });
+  setTimeout(() => process.exit(1), 10000).unref(); // Force shutdown after 10s
+};
+
+process.on("SIGINT", onCloseSignal);
+process.on("SIGTERM", onCloseSignal);
+
+
+path-file-output: /Users/ananyamadhu/Desktop/cuboid-map-server/src/server.ts
+
+path-file-content: import cors from "cors";
+import express, { type Express } from "express";
+import helmet from "helmet";
+import { pino } from "pino";
+
+import { openAPIRouter } from "@/api-docs/openAPIRouter";
+import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
+import errorHandler from "@/common/middleware/errorHandler";
+import rateLimiter from "@/common/middleware/rateLimiter";
+import requestLogger from "@/common/middleware/requestLogger";
+import { env } from "@/common/utils/envConfig";
+import { authRouter } from "./api/auth/authRouter";
+import { mapCaptureRouter } from "./api/map-capture/mapCaptureRouter";
+
+const logger = pino({ name: "server start" });
+const app: Express = express();
+
+// Set the application to trust the reverse proxy
+app.set("trust proxy", true);
+
+// Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(helmet());
+app.use(rateLimiter);
+
+// Request logging
+app.use(requestLogger);
+
+// Routes
+app.use("/health-check", healthCheckRouter);
+app.use("/auth", authRouter);
+app.use("/map-captures", mapCaptureRouter);
+
+// Swagger UI
+app.use(openAPIRouter);
+
+// Error handlers
+app.use(errorHandler());
+
+export { app, logger };
+
+
+path-file-name-content: server.ts - import cors from "cors";
+import express, { type Express } from "express";
+import helmet from "helmet";
+import { pino } from "pino";
+
+import { openAPIRouter } from "@/api-docs/openAPIRouter";
+import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
+import errorHandler from "@/common/middleware/errorHandler";
+import rateLimiter from "@/common/middleware/rateLimiter";
+import requestLogger from "@/common/middleware/requestLogger";
+import { env } from "@/common/utils/envConfig";
+import { authRouter } from "./api/auth/authRouter";
+import { mapCaptureRouter } from "./api/map-capture/mapCaptureRouter";
+
+const logger = pino({ name: "server start" });
+const app: Express = express();
+
+// Set the application to trust the reverse proxy
+app.set("trust proxy", true);
+
+// Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(helmet());
+app.use(rateLimiter);
+
+// Request logging
+app.use(requestLogger);
+
+// Routes
+app.use("/health-check", healthCheckRouter);
+app.use("/auth", authRouter);
+app.use("/map-captures", mapCaptureRouter);
+
+// Swagger UI
+app.use(openAPIRouter);
+
+// Error handlers
+app.use(errorHandler());
+
+export { app, logger };
+
