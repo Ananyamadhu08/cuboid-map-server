@@ -44,9 +44,10 @@ export class MapCaptureService {
     }
   }
 
-  async getAllCapturesByUserId(userId: string) {
+  async getAllCapturesByUserId(userId: string, page: number, limit: number) {
     try {
-      const captures = await this.mapCaptureRepository.findAllCapturesByUserId(userId);
+      const skip = (page - 1) * limit;
+      const captures = await this.mapCaptureRepository.findAllCapturesByUserId(userId, skip, limit);
 
       return ServiceResponse.success("Captures retrieved successfully", captures);
     } catch (error) {
@@ -92,44 +93,14 @@ export class MapCaptureService {
     }
 
     try {
-      const captures = await this.mapCaptureRepository.findAllCapturesByUserId(userId);
+      // Perform aggregation directly in the database
+      const topRegions = await this.mapCaptureRepository.findTopCapturedRegions(userId);
 
-      if (captures.length === 0) {
+      if (topRegions.length === 0) {
         return ServiceResponse.failure("No captures found for this user.", null, StatusCodes.NOT_FOUND);
       }
 
-      // Frequency map to keep track of region captures
-      const regionFrequencyMap = new Map<
-        string,
-        { frequency: number; title: string; imageUrl: string; captures: MapCapture[] }
-      >();
-
-      captures.forEach((capture) => {
-        const regionKey = `${capture.longitude}-${capture.latitude}`;
-        if (regionFrequencyMap.has(regionKey)) {
-          const existingEntry = regionFrequencyMap.get(regionKey)!;
-          existingEntry.frequency += 1;
-          existingEntry.captures.push(capture);
-        } else {
-          regionFrequencyMap.set(regionKey, {
-            frequency: 1,
-            title: capture.title,
-            imageUrl: capture.imageUrl,
-            captures: [capture],
-          });
-        }
-      });
-
-      // Extracting top 3 regions based on frequency
-      const topRegions = Array.from(regionFrequencyMap.entries())
-        .sort((a, b) => b[1].frequency - a[1].frequency)
-        .slice(0, 3)
-        .map(([region, { frequency, title, imageUrl, captures }]) => {
-          const [longitude, latitude] = region.split("-").map(Number);
-          return { longitude, latitude, frequency, title, imageUrl, captures };
-        });
-
-      // Saving the top regions in the cache
+      // Cache the result
       this.cache.set(cacheKey, topRegions);
 
       return ServiceResponse.success("Top captured regions retrieved successfully", topRegions, StatusCodes.OK);

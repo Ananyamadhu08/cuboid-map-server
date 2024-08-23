@@ -36,7 +36,23 @@ mapCaptureRegistry.registerPath({
   method: "get",
   path: "/map-captures",
   tags: ["Map Capture"],
-  responses: createApiResponse(MapCaptureSchema, "Map captures retrieved successfully"),
+  responses: createApiResponse(MapCaptureResponseSchema.array(), "Map captures retrieved successfully"), // Updated to .array()
+});
+
+// GET latest map capture
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/user/latest",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema, "Latest map capture retrieved successfully"),
+});
+
+// GET top regions
+mapCaptureRegistry.registerPath({
+  method: "get",
+  path: "/map-captures/top-regions",
+  tags: ["Map Capture"],
+  responses: createApiResponse(MapCaptureResponseSchema.array(), "Top captured regions retrieved successfully"), // Updated to .array()
 });
 
 // GET specific capture by ID
@@ -54,15 +70,7 @@ mapCaptureRegistry.registerPath({
       },
     },
   ],
-  responses: createApiResponse(MapCaptureSchema, "Map capture retrieved successfully"),
-});
-
-// GET latest map capture
-mapCaptureRegistry.registerPath({
-  method: "get",
-  path: "/map-captures/user/latest",
-  tags: ["Map Capture"],
-  responses: createApiResponse(MapCaptureResponseSchema, "Latest map capture retrieved successfully"),
+  responses: createApiResponse(MapCaptureResponseSchema, "Map capture retrieved successfully"),
 });
 
 // POST endpoint to save the map capture
@@ -71,8 +79,11 @@ mapCaptureRouter.post("/", validateRequest(MapCaptureSchema), mapCaptureControll
 // GET endpoint to retrieve all map captures of the user
 mapCaptureRouter.get("/", mapCaptureController.getAllUserCaptures);
 
-// GET endpoint to retrieve a specific map capture by ID
-mapCaptureRouter.get("/:id", mapCaptureController.getCaptureById);
+// GET endpoint to retrieve the latest map capture
+mapCaptureRouter.get("/user/latest", mapCaptureController.getLatestCaptureByUserId);
+
+// GET endpoint to retrieve top regions
+mapCaptureRouter.get("/top-regions", mapCaptureController.getTopCapturedRegions);
 
 // GET endpoint to retrieve a specific map capture by ID
-mapCaptureRouter.get("/user/latest", mapCaptureController.getLatestCaptureByUserId);
+mapCaptureRouter.get("/:id", mapCaptureController.getCaptureById); // This must be last to avoid conflicts
