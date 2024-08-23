@@ -22,6 +22,17 @@ export class MapCaptureRepository {
     return prisma.mapCapture.findMany();
   }
 
+  async findAllCapturesByUserId(userId: string, skip: number, take: number) {
+    return prisma.mapCapture.findMany({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip,
+      take,
+    });
+  }
+
   async findCaptureById(id: string) {
     return prisma.mapCapture.findUnique({
       where: { id },
@@ -35,5 +46,32 @@ export class MapCaptureRepository {
         createdAt: "desc",
       },
     });
+  }
+
+  async findTopCapturedRegions(userId: string) {
+    const result = await prisma.mapCapture.groupBy({
+      by: ["longitude", "latitude", "title", "imageUrl", "pitch", "zoom", "bearing"],
+      where: { userId },
+      _count: {
+        longitude: true,
+      },
+      orderBy: {
+        _count: {
+          longitude: "desc",
+        },
+      },
+      take: 3, // Get top 3 regions
+    });
+
+    return result.map((region) => ({
+      longitude: region.longitude,
+      latitude: region.latitude,
+      frequency: region._count.longitude,
+      title: region.title,
+      imageUrl: region.imageUrl,
+      pitch: region.pitch,
+      zoom: region.zoom,
+      bearing: region.bearing,
+    }));
   }
 }

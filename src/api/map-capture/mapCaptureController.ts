@@ -40,8 +40,17 @@ class MapCaptureController {
     return handleServiceResponse(serviceResponse, res);
   }
 
-  async getAllCaptures(req: Request, res: Response) {
-    const serviceResponse = await mapCaptureService.getAllCaptures();
+  async getAllUserCaptures(req: MapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const page = Number.parseInt(req.query.page as string, 10) || 1;
+    const limit = Number.parseInt(req.query.limit as string, 10) || 10;
+
+    const serviceResponse = await mapCaptureService.getAllCapturesByUserId(userId, page, limit);
 
     return handleServiceResponse(serviceResponse, res);
   }
@@ -62,6 +71,17 @@ class MapCaptureController {
     }
 
     const serviceResponse = await mapCaptureService.getLatestCaptureByUserId(userId);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  async getTopCapturedRegions(req: MapCaptureRequest, res: Response) {
+    const userId = req.user?.id as string;
+
+    if (!userId) {
+      return ServiceResponse.failure("User ID is missing from the request.", null, StatusCodes.BAD_REQUEST);
+    }
+
+    const serviceResponse = await mapCaptureService.getTopCapturedRegions(userId);
     return handleServiceResponse(serviceResponse, res);
   }
 }

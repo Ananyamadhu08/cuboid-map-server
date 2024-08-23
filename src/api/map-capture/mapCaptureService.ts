@@ -1,4 +1,5 @@
 import { ServiceResponse } from "@/common/models/serviceResponse";
+import type { MapCapture } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import NodeCache from "node-cache";
 import { MapCaptureRepository } from "./mapCaptureRepository";
@@ -43,6 +44,17 @@ export class MapCaptureService {
     }
   }
 
+  async getAllCapturesByUserId(userId: string, page: number, limit: number) {
+    try {
+      const skip = (page - 1) * limit;
+      const captures = await this.mapCaptureRepository.findAllCapturesByUserId(userId, skip, limit);
+
+      return ServiceResponse.success("Captures retrieved successfully", captures);
+    } catch (error) {
+      return ServiceResponse.failure("Failed to retrieve map captures", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async getCaptureById(id: string) {
     try {
       const capture = await this.mapCaptureRepository.findCaptureById(id);
@@ -69,6 +81,36 @@ export class MapCaptureService {
       console.log("Error retrieving latest map capture:", error);
 
       return ServiceResponse.failure("Failed to retrieve latest map capture.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getTopCapturedRegions(userId: string) {
+    const cacheKey = `topCapturedRegions_${userId}`;
+    const cachedData = this.cache.get(cacheKey);
+
+    if (cachedData) {
+      return ServiceResponse.success("Top captured regions retrieved from cache", cachedData, StatusCodes.OK);
+    }
+
+    try {
+      // Perform aggregation directly in the database
+      const topRegions = await this.mapCaptureRepository.findTopCapturedRegions(userId);
+
+      if (topRegions.length === 0) {
+        return ServiceResponse.failure("No captures found for this user.", null, StatusCodes.NOT_FOUND);
+      }
+
+      // Cache the result
+      this.cache.set(cacheKey, topRegions);
+
+      return ServiceResponse.success("Top captured regions retrieved successfully", topRegions, StatusCodes.OK);
+    } catch (error) {
+      console.log("Error retrieving top captured regions:", error);
+      return ServiceResponse.failure(
+        "Failed to retrieve top captured regions.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

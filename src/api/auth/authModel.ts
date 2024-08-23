@@ -20,5 +20,8 @@ export const AuthRequestSchema = z
 export const AuthResponseSchema = z
   .object({
     accessToken: z.string().openapi({ example: "jwt.token.here" }),
+    refreshToken: z.string().openapi({ example: "refresh.token.here" }),
+    username: z.string().openapi({ example: "user123" }),
+    email: z.string().email().openapi({ example: "user@example.com" }),
   })
   .openapi("AuthResponse");
